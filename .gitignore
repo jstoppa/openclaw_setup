@@ -1,0 +1,49 @@
+# Environment files (contains secrets)
+.env
+data/.env
+
+# OpenClaw sensitive config (contains tokens)
+data/openclaw.json
+data/openclaw.json.bak
+
+# Device identity (contains private keys)
+data/identity/
+
+# Credentials and pairing (per-setup, contains secrets)
+data/credentials/
+data/devices/
+data/agents/**/auth-profiles.json
+data/agents/**/agent/
+
+# Telegram state (per-setup)
+data/telegram/
+
+# Runtime files
+data/update-check.json
+data/completions/
+
+# Docker
+.docker/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+*.tmp
+
+# OS files
+**/.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Backup files
+*.bak
+*.backup

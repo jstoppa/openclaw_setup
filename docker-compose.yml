@@ -1,0 +1,54 @@
+services:
+  # Service for running OpenClaw CLI commands
+  openclaw-cli:
+    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    build:
+      context: https://github.com/openclaw/openclaw.git#main
+      dockerfile: Dockerfile
+      args:
+        OPENCLAW_DOCKER_APT_PACKAGES: ${OPENCLAW_DOCKER_APT_PACKAGES:-}
+    container_name: openclaw-cli
+    environment:
+      - HOME=/home/node
+      - TERM=xterm-256color
+      - BROWSER=echo
+      - CLAUDE_AI_SESSION_KEY=${CLAUDE_AI_SESSION_KEY:-}
+      - CLAUDE_WEB_SESSION_KEY=${CLAUDE_WEB_SESSION_KEY:-}
+      - CLAUDE_WEB_COOKIE=${CLAUDE_WEB_COOKIE:-}
+    volumes:
+      - ./data:/home/node/.openclaw
+    stdin_open: true
+    tty: true
+    init: true
+    entrypoint: ["node", "dist/index.js"]
+    profiles:
+      - cli
+
+  # Service for running the web gateway
+  openclaw-gateway:
+    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    build:
+      context: https://github.com/openclaw/openclaw.git#main
+      dockerfile: Dockerfile
+      args:
+        OPENCLAW_DOCKER_APT_PACKAGES: ${OPENCLAW_DOCKER_APT_PACKAGES:-}
+    container_name: openclaw-gateway
+    environment:
+      - HOME=/home/node
+      - TERM=xterm-256color
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - CLAUDE_AI_SESSION_KEY=${CLAUDE_AI_SESSION_KEY:-}
+      - CLAUDE_WEB_SESSION_KEY=${CLAUDE_WEB_SESSION_KEY:-}
+      - CLAUDE_WEB_COOKIE=${CLAUDE_WEB_COOKIE:-}
+    volumes:
+      - ./data:/home/node/.openclaw
+    ports:
+      - "127.0.0.1:${OPENCLAW_GATEWAY_PORT:-18789}:18789"
+      - "127.0.0.1:${OPENCLAW_BRIDGE_PORT:-18790}:18790"
+    command: >
+      node dist/index.js gateway
+      --bind ${OPENCLAW_GATEWAY_BIND:-lan}
+      --port 18789
+      --allow-unconfigured
+    restart: unless-stopped
+    init: true
