@@ -6,9 +6,12 @@ Docker-based setup for running [OpenClaw](https://github.com/openclaw/openclaw) 
 
 | File / Folder | Purpose |
 |---|---|
-| `docker-compose.yml` | Two services: **CLI** (interactive) and **Gateway** (web UI) |
-| `.env.example` | Template for all configuration variables |
+| `docker-compose.yml` | Two services: **CLI** (interactive) and **Gateway** (web UI + whisper + browser) |
+| `Dockerfile.gateway` | Gateway image: base OpenClaw + whisper-cli (audio) + Playwright Chromium (stealth browser) |
 | `scripts/upgrade.sh` | One-command upgrade to the latest OpenClaw version |
+| `data/openclaw.json` | Example config (tracked): Codex + Telegram, browser + audio; replace with your own tokens/settings |
+| `data/browser/chrome-wrapper.sh` | Stealth Chrome wrapper (anti-detection flags) used when browser tool is enabled |
+| `data/browser/stealth-browse.js` | Stealth Playwright script for bot-protected sites (screenshot, content, click, type, scroll) |
 | `data/` | Persistent volume mount for all OpenClaw data |
 
 ## Prerequisites
@@ -78,21 +81,28 @@ All settings live in `.env`. See `.env.example` for the full list with descripti
 | `OPENCLAW_GATEWAY_TOKEN` | *(required)* | Auth token for web UI access |
 | `OPENCLAW_DOCKER_APT_PACKAGES` | *(empty)* | Extra system packages to install in the container |
 
+## Configuration (openclaw.json)
+
+The included `data/openclaw.json` is an **example** set up for **Codex** and **Telegram** with the **browser** tool and **audio transcription** (whisper-cli) enabled. You should replace it with your own configuration: set `gateway.auth.token` for web UI access, and if you use Telegram set `channels.telegram.botToken` and `channels.telegram.allowFrom` (array of user IDs). The file is tracked in git. Gateway env vars (`OPENCLAW_GATEWAY_TOKEN`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOW_FROM`) are still passed into the container and can override or supplement the file.
+
 ## Data Directory
 
 All persistent data is stored in `./data/`, which maps to `~/.openclaw` inside the container:
 
 ```
 data/
-├── openclaw.json       # Configuration (contains tokens — gitignored)
-├── agents/             # Agent configs and session transcripts (.jsonl)
-├── canvas/             # Canvas files
-├── cron/               # Cron job definitions
-├── memory/             # Vector embeddings (SQLite) for semantic search
-└── workspace/          # Working directory for agent tasks
+├── openclaw.json              # Configuration (tracked); gateway token, Telegram, browser, audio
+├── browser/
+│   ├── chrome-wrapper.sh      # Stealth Chrome wrapper for browser tool
+│   └── stealth-browse.js      # Stealth Playwright for bot-protected sites
+├── agents/                    # Agent configs and session transcripts (.jsonl)
+├── canvas/                    # Canvas files
+├── cron/                      # Cron job definitions
+├── memory/                    # Vector embeddings (SQLite) for semantic search
+└── workspace/                 # Working directory for agent tasks
 ```
 
-> **Note:** Sensitive files (`openclaw.json`, credentials, identity keys) are excluded from version control via `.gitignore`. Only the directory structure (via `.gitkeep` files) is committed.
+> **Note:** `openclaw.json` is tracked. Other sensitive paths (credentials, identity keys, etc.) remain in `.gitignore`.
 
 ## Upgrading
 

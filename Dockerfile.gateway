@@ -1,0 +1,30 @@
+# Extends the base OpenClaw image with whisper-cli for local audio transcription.
+# Builds whisper.cpp from source, bundles the tiny model, then removes build tools.
+# No Python, no pip — just a standalone C++ binary.
+# Also installs Playwright Chromium for headless/stealth browser.
+ARG BASE_IMAGE=openclaw:local
+FROM ${BASE_IMAGE}
+LABEL project=openclaw_setup
+
+USER root
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg cmake g++ make git && \
+    git clone --depth 1 https://github.com/ggerganov/whisper.cpp /tmp/whisper.cpp && \
+    cd /tmp/whisper.cpp && cmake -B build -DBUILD_SHARED_LIBS=OFF && cmake --build build --config Release && \
+    cp build/bin/whisper-cli /usr/local/bin/ && \
+    bash models/download-ggml-model.sh tiny && \
+    mkdir -p /usr/local/share/whisper && \
+    cp models/ggml-tiny.bin /usr/local/share/whisper/ && \
+    apt-get remove -y cmake g++ make git && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/* /tmp/whisper.cpp
+
+ENV WHISPER_CPP_MODEL=/usr/local/share/whisper/ggml-tiny.bin
+
+# Install Playwright Chromium + OS dependencies for headless browser
+ENV PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright
+RUN node /app/node_modules/playwright-core/cli.js install --with-deps chromium && \
+    chown -R node:node /home/node/.cache
+
+USER node

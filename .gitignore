@@ -2,8 +2,7 @@
 .env
 data/.env
 
-# OpenClaw sensitive config (contains tokens)
-data/openclaw.json
+# OpenClaw config backup (openclaw.json is tracked)
 data/openclaw.json.bak
 
 # Device identity (contains private keys)

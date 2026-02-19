@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
       args:
         OPENCLAW_DOCKER_APT_PACKAGES: ${OPENCLAW_DOCKER_APT_PACKAGES:-}
+      labels:
+        project: openclaw_setup
     container_name: openclaw-cli
     environment:
       - HOME=/home/node
@@ -24,14 +26,16 @@ services:
     profiles:
       - cli
 
-  # Service for running the web gateway
+  # Service for running the web gateway (extends base with whisper-cli for audio transcription)
   openclaw-gateway:
-    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    image: openclaw-gateway:local
     build:
-      context: https://github.com/openclaw/openclaw.git#main
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.gateway
       args:
-        OPENCLAW_DOCKER_APT_PACKAGES: ${OPENCLAW_DOCKER_APT_PACKAGES:-}
+        BASE_IMAGE: ${OPENCLAW_IMAGE:-openclaw:local}
+      labels:
+        project: openclaw_setup
     container_name: openclaw-gateway
     environment:
       - HOME=/home/node
@@ -40,6 +44,8 @@ services:
       - CLAUDE_AI_SESSION_KEY=${CLAUDE_AI_SESSION_KEY:-}
       - CLAUDE_WEB_SESSION_KEY=${CLAUDE_WEB_SESSION_KEY:-}
       - CLAUDE_WEB_COOKIE=${CLAUDE_WEB_COOKIE:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_ALLOW_FROM=${TELEGRAM_ALLOW_FROM}
     volumes:
       - ./data:/home/node/.openclaw
     ports:
@@ -52,3 +58,6 @@ services:
       --allow-unconfigured
     restart: unless-stopped
     init: true
+    shm_size: '2gb'
+    security_opt:
+      - seccomp=unconfined

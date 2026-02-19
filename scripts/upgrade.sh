@@ -1,12 +1,15 @@
 #!/bin/bash
 # Upgrade OpenClaw to the latest version
 # Data in ./data/ is preserved - only the application image is rebuilt
+# Only touches openclaw_setup resources; other containers/images are left alone
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_DIR"
+
+export COMPOSE_PROJECT_NAME=openclaw_setup
 
 echo "=== OpenClaw Upgrade ==="
 echo ""
@@ -16,20 +19,29 @@ echo "Current version:"
 docker compose exec openclaw-gateway node dist/index.js --version 2>/dev/null || echo "  (gateway not running)"
 echo ""
 
-# Rebuild image from latest
-echo "Building latest image (this may take a few minutes)..."
-docker compose build --no-cache
-
-# Restart gateway
-echo ""
-echo "Restarting gateway..."
+# Stop gateway (keeps images for now so build can use cache)
+echo "Stopping gateway..."
 docker compose down
-docker compose up -d openclaw-gateway
 
-# Clean up old openclaw images only
+# Rebuild images from latest (--no-cache needed because source is a remote GitHub repo)
 echo ""
-echo "Cleaning up old openclaw images..."
-docker images --filter "dangling=true" --filter "label=com.docker.compose.project=openclaw_profile" -q | xargs -r docker rmi 2>/dev/null || true
+echo "Building latest image (this may take a few minutes)..."
+docker compose build --no-cache openclaw-cli
+docker compose build --no-cache openclaw-gateway
+
+# Clean up old images/cache to free disk space (only openclaw_setup resources)
+echo ""
+echo "Cleaning up old images and cache..."
+old_images=$(docker images -q --filter "label=project=openclaw_setup" --filter "dangling=true")
+if [ -n "$old_images" ]; then
+    docker rmi -f $old_images || true
+fi
+docker builder prune -f --filter label=project=openclaw_setup
+
+# Start gateway
+echo ""
+echo "Starting gateway..."
+docker compose up -d openclaw-gateway
 
 # Show new version
 echo ""
