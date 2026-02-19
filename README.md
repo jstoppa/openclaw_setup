@@ -17,7 +17,7 @@ Docker-based setup for running [OpenClaw](https://github.com/openclaw/openclaw) 
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) and **Docker Compose v2**
-- A Claude AI session key (configured during onboarding)
+- An API key from any LLM provider, or Codex OAuth (configured during onboarding)
 
 ## Quick Start
 
