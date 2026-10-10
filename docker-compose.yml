@@ -17,8 +17,12 @@ services:
       - CLAUDE_AI_SESSION_KEY=${CLAUDE_AI_SESSION_KEY:-}
       - CLAUDE_WEB_SESSION_KEY=${CLAUDE_WEB_SESSION_KEY:-}
       - CLAUDE_WEB_COOKIE=${CLAUDE_WEB_COOKIE:-}
+      - XPODCAST_DB=/data/xpodcast_db/twitter_data.sqlite
     volumes:
       - ./data:/home/node/.openclaw
+      # xpodcast SQLite DB (written by xpodcast_infra containers), mounted read-only.
+      # Mount the directory, not the file, so SQLite can see the rollback journal.
+      - ${XPODCAST_DB_DIR:-../xpodcast_db/sqlite_data}:/data/xpodcast_db:ro
     stdin_open: true
     tty: true
     init: true
@@ -46,8 +50,12 @@ services:
       - CLAUDE_WEB_COOKIE=${CLAUDE_WEB_COOKIE:-}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_ALLOW_FROM=${TELEGRAM_ALLOW_FROM}
+      - XPODCAST_DB=/data/xpodcast_db/twitter_data.sqlite
     volumes:
       - ./data:/home/node/.openclaw
+      # xpodcast SQLite DB (written by xpodcast_infra containers), mounted read-only.
+      # Mount the directory, not the file, so SQLite can see the rollback journal.
+      - ${XPODCAST_DB_DIR:-../xpodcast_db/sqlite_data}:/data/xpodcast_db:ro
     ports:
       - "127.0.0.1:${OPENCLAW_GATEWAY_PORT:-18789}:18789"
       - "127.0.0.1:${OPENCLAW_BRIDGE_PORT:-18790}:18790"

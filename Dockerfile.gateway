@@ -1,4 +1,5 @@
-# Extends the base OpenClaw image with whisper-cli for local audio transcription.
+# Extends the base OpenClaw image with whisper-cli for local audio transcription
+# and the sqlite3 CLI for read-only queries against the xpodcast DB.
 # Builds whisper.cpp from source, bundles the tiny model, then removes build tools.
 # No Python, no pip — just a standalone C++ binary.
 # Also installs Playwright Chromium for headless/stealth browser.
@@ -9,7 +10,7 @@ LABEL project=openclaw_setup
 USER root
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg cmake g++ make git && \
+    apt-get install -y --no-install-recommends ffmpeg sqlite3 cmake g++ make git && \
     git clone --depth 1 https://github.com/ggerganov/whisper.cpp /tmp/whisper.cpp && \
     cd /tmp/whisper.cpp && cmake -B build -DBUILD_SHARED_LIBS=OFF && cmake --build build --config Release && \
     cp build/bin/whisper-cli /usr/local/bin/ && \
